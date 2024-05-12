@@ -81,7 +81,7 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
     private lazy var backwardButton = makeButton(systemName: "backward.end", size: CGSize(width: 24, height: 24))
     
     private var verticalStackView: UIStackView!
-    private var loader: UIActivityIndicatorView?
+    private let loader = UIImageView(image: UIImage(named: "Loader"))
     private var coverContainerView = UIView()
     lazy var labelsStackView = UIStackView(arrangedSubviews: [titleLabel, artistLabel])
     
@@ -118,7 +118,6 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         updateNavigationBarButtonAppearance()
     }
     
-    // MARK: - -------------- navbar -----------------
     private func updateNavigationBarButtonAppearance() {
         DispatchQueue.main.async {
             let buttons = [self.homeButton, self.musicButton, self.favoriteButton]
@@ -158,7 +157,7 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         tabBarView.addSubview(stackView)
         view.addSubview(tabBarView)
-
+        
         NSLayoutConstraint.activate([
             tabBarView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             tabBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -199,9 +198,6 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         }
     }
     
-    // MARK: - -----------------------
-    
-    
     private func setupProgressBar() {
         view.addSubview(progressBar)
         progressBar.translatesAutoresizingMaskIntoConstraints = false
@@ -227,6 +223,8 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
             coverPhotoImageView.trailingAnchor.constraint(equalTo: coverContainerView.trailingAnchor),
             coverPhotoImageView.bottomAnchor.constraint(equalTo: coverContainerView.bottomAnchor)
         ])
+        coverPhotoImageView.transform = CGAffineTransform(scaleX: 0.7, y: 0.7)
+        
         
     }
     
@@ -286,52 +284,64 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         ])
         return button
     }
+    
     private func setupLoader() {
-        let loader = UIActivityIndicatorView(style: .large)
-        loader.color = .white
+        loader.contentMode = .scaleAspectFit
         loader.translatesAutoresizingMaskIntoConstraints = false
+        loader.isHidden = true
         view.addSubview(loader)
         
         NSLayoutConstraint.activate([
             loader.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            loader.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            loader.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            loader.widthAnchor.constraint(equalToConstant: 50),
+            loader.heightAnchor.constraint(equalToConstant: 50)
         ])
         
-        self.loader = loader
+        let rotationAnimation = CABasicAnimation(keyPath: "transform.rotation")
+        rotationAnimation.fromValue = 0
+        rotationAnimation.toValue = Double.pi * 2
+        rotationAnimation.duration = 1
+        rotationAnimation.repeatCount = .infinity
+        loader.layer.add(rotationAnimation, forKey: "rotationAnimation")
     }
     
     private func playPauseButtonTapped() {
         viewModel.togglePlayback()
         updateUI()
     }
+    
     func updateCoverPhotoSizeWithAnimation() {
-        let newSize = viewModel.coverPhotoSize()
         let targetTransform: CGAffineTransform
-        
         if viewModel.isShowingLoader || !viewModel.isPlaying {
-            targetTransform = CGAffineTransform(scaleX: newSize.width / self.coverPhotoImageView.bounds.width, y: newSize.height / self.coverPhotoImageView.bounds.height)
+            targetTransform = viewModel.coverPhotoSize()
         } else {
             targetTransform = .identity
         }
         
-        UIView.animate(withDuration: 0.5, animations: {
+        UIView.animate(withDuration: 0.5) {
             self.coverPhotoImageView.transform = targetTransform
-        })
+        }
     }
     
+    private func setupLoaderIfNeeded() {
+        if viewModel.isPlaying && viewModel.isShowingLoader {
+            setupLoader()
+            view.addSubview(loader)
+            loader.isHidden = false
+            
+        } else {
+            loader.removeFromSuperview()
+        }
+    }
     
     func updateUI() {
         DispatchQueue.main.async {
             self.playPauseButton.setImage(UIImage(systemName: self.viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill"), for: .normal)
             self.progressBar.setProgress(self.viewModel.progress, animated: true)
             
-            if let loader = self.loader {
-                if self.viewModel.isShowingLoader {
-                    loader.startAnimating()
-                } else {
-                    loader.stopAnimating()
-                }
-            }
+            self.setupLoaderIfNeeded()
+            
             if self.viewModel.shouldUpdateCoverPhotoSize() {
                 self.viewModel.delegate?.updateCoverPhotoSizeWithAnimation()
             }
@@ -343,6 +353,3 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
     MusicViewController()
 }
 
-#Preview {
-    MusicViewController()
-}

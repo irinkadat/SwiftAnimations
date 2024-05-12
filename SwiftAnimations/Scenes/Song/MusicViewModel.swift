@@ -19,7 +19,7 @@ class MusicViewModel {
     var timer: Timer?
     var isShowingLoader: Bool = false
     var selectedButtonIndex: Int? = nil
-
+    
     
     func togglePlayback() {
         isPlaying.toggle()
@@ -61,19 +61,19 @@ class MusicViewModel {
         timer = nil
     }
     
-    func coverPhotoSize() -> CGSize {
+    func coverPhotoSize() -> CGAffineTransform {
         if isPlaying && !isShowingLoader {
-            return CGSize(width: 304, height: 319)
+            return CGAffineTransform(scaleX: 1, y: 1)
         } else if isShowingLoader {
-            return CGSize(width: 215, height: 215)
+            return CGAffineTransform(scaleX: 0.7, y: 0.7)
         } else {
-            return CGSize(width: 215, height: 215)
+            return CGAffineTransform(scaleX: 0.7, y: 0.7)
         }
     }
     
     func shouldUpdateCoverPhotoSize() -> Bool {
-            return isShowingLoader || !isPlaying
-        }
+        return isShowingLoader || !isPlaying
+    }
     
     func selectButton(at index: Int) {
         if selectedButtonIndex == index {

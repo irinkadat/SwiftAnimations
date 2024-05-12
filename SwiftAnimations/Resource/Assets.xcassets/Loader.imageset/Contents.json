@@ -1,11 +1,11 @@
 {
   "images" : [
     {
-      "filename" : "musicBtn.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "Loader.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
