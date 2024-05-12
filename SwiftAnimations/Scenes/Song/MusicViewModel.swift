@@ -7,12 +7,19 @@
 
 import Foundation
 
+// MARK: - Music View Model Delegate Protocol
+
 protocol MusicViewModelDelegate: AnyObject {
     func updateUI()
-    func updateCoverPhotoSizeWithAnimation()
+    func setupLoader()
 }
 
+// MARK: - Music View Model Class
+
 class MusicViewModel {
+    
+    // MARK: - Properties
+    
     weak var delegate: MusicViewModelDelegate?
     var isPlaying: Bool = false
     var progress: Float = 0.0
@@ -20,6 +27,7 @@ class MusicViewModel {
     var isShowingLoader: Bool = false
     var selectedButtonIndex: Int? = nil
     
+    // MARK: - Playback Methods
     
     func togglePlayback() {
         isPlaying.toggle()
@@ -28,11 +36,11 @@ class MusicViewModel {
             isShowingLoader = true
             delegate?.updateUI()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.delegate?.updateCoverPhotoSizeWithAnimation()
+                self.updateCoverPhotoSizeWithAnimation()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     self.isShowingLoader = false
                     self.delegate?.updateUI()
-                    self.delegate?.updateCoverPhotoSizeWithAnimation()
+                    self.updateCoverPhotoSizeWithAnimation()
                 }
             }
         } else {
@@ -41,6 +49,8 @@ class MusicViewModel {
             delegate?.updateUI()
         }
     }
+    
+    // MARK: - Timer Methods
     
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -61,19 +71,17 @@ class MusicViewModel {
         timer = nil
     }
     
+    // MARK: - Cover Photo Methods
+    
     func coverPhotoSize() -> CGAffineTransform {
         if isPlaying && !isShowingLoader {
             return CGAffineTransform(scaleX: 1, y: 1)
-        } else if isShowingLoader {
-            return CGAffineTransform(scaleX: 0.7, y: 0.7)
         } else {
             return CGAffineTransform(scaleX: 0.7, y: 0.7)
         }
     }
     
-    func shouldUpdateCoverPhotoSize() -> Bool {
-        return isShowingLoader || !isPlaying
-    }
+    // MARK: - Button Selection Methods
     
     func selectButton(at index: Int) {
         if selectedButtonIndex == index {
@@ -87,6 +95,31 @@ class MusicViewModel {
     func shouldEnlargeButton(at index: Int) -> Bool {
         return selectedButtonIndex == index
     }
+    
+    // MARK: - Animation Methods
+    
+    @discardableResult
+    func updateCoverPhotoSizeWithAnimation() -> CGAffineTransform {
+        var targetTransform: CGAffineTransform
+        if isShowingLoader || !isPlaying {
+            targetTransform = coverPhotoSize()
+            return targetTransform
+        } else {
+            targetTransform = .identity
+            return targetTransform
+        }
+    }
+    
+    // MARK: - Navigation Bar Button Appearance Methods
+    
+    func updateNavigationBarButtonAppearance() -> CGFloat {
+        var targetScale: CGFloat
+        
+        guard let index = selectedButtonIndex else {
+            return 1
+        }
+        let shouldEnlarge = shouldEnlargeButton(at: index)
+        targetScale = shouldEnlarge ? 1.2 : 1.0
+        return targetScale
+    }
 }
-
-

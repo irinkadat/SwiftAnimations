@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  MusicViewController.swift
 //  SwiftAnimations
 //
 //  Created by Irinka Datoshvili on 10.05.24.
@@ -9,8 +9,10 @@ import UIKit
 
 class MusicViewController: UIViewController, MusicViewModelDelegate {
     
+    // MARK: - Properties
     
     private let viewModel = MusicViewModel()
+    
     private lazy var coverPhotoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
@@ -18,6 +20,7 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
+    
     private var lastSelectedButton: UIButton?
     
     private lazy var titleLabel: UILabel = {
@@ -74,6 +77,7 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         let button = makeTabBarButton(systemName: "heart", size: CGSize(width: 21.44, height: 21.44))
         return button
     }()
+    
     private lazy var playPauseButton = makeButton(systemName: "play.circle.fill",  size: CGSize(width: 70, height: 70))
     private lazy var shuffleButton = makeButton(systemName: "shuffle", size: CGSize(width: 24, height: 24))
     private lazy var repeatButton = makeButton(systemName: "repeat", size: CGSize(width: 24, height: 24))
@@ -81,17 +85,21 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
     private lazy var backwardButton = makeButton(systemName: "backward.end", size: CGSize(width: 24, height: 24))
     
     private var verticalStackView: UIStackView!
-    private let loader = UIImageView(image: UIImage(named: "Loader"))
+    private var loader = UIImageView(image: UIImage(named: "Loader"))
     private var coverContainerView = UIView()
     lazy var labelsStackView = UIStackView(arrangedSubviews: [titleLabel, artistLabel])
     
     
+    // MARK: - View Life Cycle
+    
     override func viewDidLoad() {
-        view.backgroundColor = UIColor(red: 22/255, green: 20/255, blue: 17/255, alpha: 1.0)
         super.viewDidLoad()
+        view.backgroundColor = UIColor(red: 22/255, green: 20/255, blue: 17/255, alpha: 1.0)
         setupUI()
         viewModel.delegate = self
     }
+    
+    // MARK: - UI Setup
     
     private func setupUI() {
         stylePlayButton()
@@ -107,32 +115,20 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         }, for: .touchUpInside)
     }
     
+    // MARK: - Navigation Bar Buttons Setup
+    
     private func setupNavigationBarButtons() {
         let buttons = [homeButton, musicButton, favoriteButton]
         for (index, button) in buttons.enumerated() {
             button.addAction(UIAction { [weak self] _ in
                 self?.viewModel.selectButton(at: index)
-                self?.updateNavigationBarButtonAppearance()
+                self?.updateNavigationBarButtons()
             }, for: .touchUpInside)
         }
-        updateNavigationBarButtonAppearance()
+        updateNavigationBarButtons()
     }
     
-    private func updateNavigationBarButtonAppearance() {
-        DispatchQueue.main.async {
-            let buttons = [self.homeButton, self.musicButton, self.favoriteButton]
-            for (index, button) in buttons.enumerated() {
-                let shouldEnlarge = self.viewModel.shouldEnlargeButton(at: index)
-                let targetScale: CGFloat = shouldEnlarge ? 1.2 : 1.0
-                
-                UIView.animate(withDuration: 0.1, animations: {
-                    button.imageView?.transform = CGAffineTransform(scaleX: targetScale, y: targetScale)
-                }) { _ in
-                    button.layoutIfNeeded()
-                }
-            }
-        }
-    }
+    // MARK: - Helper Methods
     
     private func makeTabBarButton(systemName: String, size: CGSize) -> UIButton {
         let button = UIButton()
@@ -175,19 +171,8 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
             }, for: .touchUpInside)
         }
     }
-    private func handleTabBarButtonTapped(_ tappedButton: UIButton) {
-        tappedButton.transform = CGAffineTransform(scaleX: 1.8, y: 1.8)
-        tappedButton.tintColor = UIColor(red: 58/255, green: 137/255, blue: 255/255, alpha: 1.0)
-        
-        if let lastButton = lastSelectedButton, lastButton != tappedButton {
-            UIView.animate(withDuration: 0.1, animations: {
-                lastButton.transform = .identity
-                lastButton.tintColor = .white
-            })
-        }
-        
-        lastSelectedButton = tappedButton
-    }
+    
+    // MARK: - Button Animation
     
     private func animateButton(_ button: UIButton) {
         UIView.animate(withDuration: 0.1, animations: {
@@ -197,6 +182,8 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
             
         }
     }
+    
+    // MARK: - Progress Bar Setup
     
     private func setupProgressBar() {
         view.addSubview(progressBar)
@@ -208,6 +195,8 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
             
         ])
     }
+    
+    // MARK: - Cover Photo Container Setup
     
     private func setupCoverPhotoContainer() {
         coverContainerView.translatesAutoresizingMaskIntoConstraints = false
@@ -224,9 +213,10 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
             coverPhotoImageView.bottomAnchor.constraint(equalTo: coverContainerView.bottomAnchor)
         ])
         coverPhotoImageView.transform = CGAffineTransform(scaleX: 0.7, y: 0.7)
-        
-        
+        coverPhotoImageView.transform = CGAffineTransform(scaleX: 0.7, y: 0.7)
     }
+    
+    // MARK: - Labels Setup
     
     private func setupLabels() {
         labelsStackView.axis = .vertical
@@ -240,6 +230,8 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
             labelsStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
     }
+    
+    // MARK: - Button Stack View Setup
     
     private func setupButtonStackView() {
         let buttons: [UIButton] = [shuffleButton, backwardButton, playPauseButton, forwardButton, repeatButton]
@@ -255,6 +247,8 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         ])
     }
     
+    // MARK: - Stack View Helper
+    
     private func createStackView(with views: [UIView], axis: NSLayoutConstraint.Axis, spacing: CGFloat) -> UIStackView {
         let stackView = UIStackView(arrangedSubviews: views)
         stackView.axis = axis
@@ -264,9 +258,13 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         return stackView
     }
     
+    // MARK: - Play Button Styling
+    
     private func stylePlayButton() {
         playPauseButton.tintColor = UIColor(red: 58/255, green: 137/255, blue: 255/255, alpha: 1.0)
     }
+    
+    // MARK: - Button Creation Helper
     
     private func makeButton(systemName: String, size: CGSize) -> UIButton {
         let button = UIButton()
@@ -285,7 +283,9 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         return button
     }
     
-    private func setupLoader() {
+    // MARK: - Loader Setup
+    
+    func setupLoader() {
         loader.contentMode = .scaleAspectFit
         loader.translatesAutoresizingMaskIntoConstraints = false
         loader.isHidden = true
@@ -306,23 +306,30 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         loader.layer.add(rotationAnimation, forKey: "rotationAnimation")
     }
     
+    // MARK: - Play/Pause Button Action
+    
     private func playPauseButtonTapped() {
         viewModel.togglePlayback()
         updateUI()
     }
     
-    func updateCoverPhotoSizeWithAnimation() {
-        let targetTransform: CGAffineTransform
-        if viewModel.isShowingLoader || !viewModel.isPlaying {
-            targetTransform = viewModel.coverPhotoSize()
-        } else {
-            targetTransform = .identity
-        }
-        
-        UIView.animate(withDuration: 0.5) {
-            self.coverPhotoImageView.transform = targetTransform
+    // MARK: - Update Navigation Bar Buttons
+    
+    private func updateNavigationBarButtons() {
+        DispatchQueue.main.async {
+            let buttons = [self.homeButton, self.musicButton, self.favoriteButton]
+            for (_, button) in buttons.enumerated() {
+                
+                UIView.animate(withDuration: 0.1, animations: {
+                    button.imageView?.transform = CGAffineTransform(scaleX: self.viewModel.updateNavigationBarButtonAppearance(), y: self.viewModel.updateNavigationBarButtonAppearance())
+                }) { _ in
+                    button.layoutIfNeeded()
+                }
+            }
         }
     }
+    
+    // MARK: - Loader Setup if Needed
     
     private func setupLoaderIfNeeded() {
         if viewModel.isPlaying && viewModel.isShowingLoader {
@@ -335,6 +342,8 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
         }
     }
     
+    // MARK: - Update UI
+    
     func updateUI() {
         DispatchQueue.main.async {
             self.playPauseButton.setImage(UIImage(systemName: self.viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill"), for: .normal)
@@ -342,14 +351,26 @@ class MusicViewController: UIViewController, MusicViewModelDelegate {
             
             self.setupLoaderIfNeeded()
             
-            if self.viewModel.shouldUpdateCoverPhotoSize() {
-                self.viewModel.delegate?.updateCoverPhotoSizeWithAnimation()
+            UIView.animate(withDuration: 0.5) {
+                self.coverPhotoImageView.transform = self.viewModel.updateCoverPhotoSizeWithAnimation()
+                
             }
         }
     }
+    
+    // MARK: - Handle Tab Bar Button Tap
+    
+    private func handleTabBarButtonTapped(_ tappedButton: UIButton) {
+        tappedButton.transform = CGAffineTransform(scaleX: 1.8, y: 1.8)
+        tappedButton.tintColor = UIColor(red: 58/255, green: 137/255, blue: 255/255, alpha: 1.0)
+        
+        if let lastButton = lastSelectedButton, lastButton != tappedButton {
+            UIView.animate(withDuration: 0.1, animations: {
+                lastButton.transform = .identity
+                lastButton.tintColor = .white
+            })
+        }
+        
+        lastSelectedButton = tappedButton
+    }
 }
-
-#Preview {
-    MusicViewController()
-}
-
